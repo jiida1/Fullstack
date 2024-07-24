@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
-
+import personService from '../services/persons.jsx'
+import Notification from './notification.jsx'
 
 const Filter=({filter, handleFilterChange})=>{
   return(
@@ -27,11 +27,13 @@ const PersonForm=({addPerson, newName, handleNameChange, newNumber, handleNumber
   )
 }
 
-const Persons=({personsEsilla})=>{
+const Persons=({personsEsilla, deletePerson})=>{
   return(
     <ul>
         {personsEsilla.map(person=>
-          <li key={person.name}>{person.name} {person.number}</li>
+          <li key={person.name}>{person.name} {person.number}
+            <button onClick={()=>deletePerson(person.id)}>delete</button>
+            </li>
         )}
       </ul>
   )
@@ -42,29 +44,88 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const[newNumber, setNewNumber]=useState('')
   const[filter, setFilter]=useState('')
+  const [notificationMessage, setNotificationMessage]=useState({state: null, color: 'green'})
+
+  
+
 
   useEffect(()=>{
     console.log('effect')
-    axios.get('http://localhost:3001/persons').then(response=>{
-        setPersons(response.data)
-      })
+    personService.getAll().then(initialPersons=>{
+      setPersons(initialPersons)
+    })
+    
       
   },[])
 
   const addPerson=(event)=>{
     event.preventDefault()
 
-    if (persons.some(person=>person.name===newName)){
-      alert(newName+' is already added to phonebook')
+    const alreadyPerson=persons.find(person=>person.name===newName)
 
+    if(alreadyPerson){
+      const confirmUpdate=window.confirm(newName+' is already')
+      if(confirmUpdate){
+        const updatedPerson={...alreadyPerson, number: newNumber}
+        personService.update(alreadyPerson.id, updatedPerson).then(returnedPerson=>{
+          setPersons(persons.map(person=>person.id !== alreadyPerson.id ? person : returnedPerson))
+          setNewNumber('')
+          setNotificationMessage({state:`Updated number for ${newName}`, color:'green'})
+          setTimeout(()=>{
+            setNotificationMessage({state:null, color:'green'})
+          }, 5000)
+
+          
+        }).catch(error=>{
+          setNotificationMessage({state:`Information of ${newName} has already been removed from the server`,color: 'red'})
+          setTimeout(()=>{
+            setNotificationMessage({state:null, color:'green'})
+          },5000)
+          setPersons(persons.filter(p=>p.id!==alreadyPerson.id))
+        })
+    }
+    
     }else{
       const newPerson={
         name:newName,
         number:newNumber
       }
-      setPersons(persons.concat(newPerson))
-      setNewName('')
-      setNewNumber('')
+
+      personService.create(newPerson).then(returnedPerson=>{
+        setPersons(persons.concat(returnedPerson))
+        
+        setNewName('')
+        setNewNumber('')
+        setNotificationMessage({state:`Added ${newName}`, color:'green'})
+          
+          setTimeout(()=>{
+            setNotificationMessage({state:null, color:'green'})
+          },5000)
+      }).catch(error=>{
+        setNotificationMessage({state:`Error: adding error ${newName}`, color: 'red'})
+        setTimeout(()=>{
+          setNotificationMessage({state:null, color:'green'})
+        },5000)
+
+      })
+    }
+  }
+
+  const deletePerson=(id)=>{
+    const person=persons.find(p=>p.id===id)
+    if(window.confirm('Delete '+person.name)){
+      personService.remove(id).then(()=>{
+        setPersons(persons.filter(p=>p.id!==id))
+        setNotificationMessage({state:`Deleted ${person.name}`, color:'green'})
+          setTimeout(()=>{
+            setNotificationMessage({state: null, color:'green'})
+          },5000)
+      }).catch(error=>{
+        setNotificationMessage({state:`Error: delete error ${newName}`, color: 'red'})
+        setTimeout(()=>{
+          setNotificationMessage({state:null, color:'green'})
+        },5000)
+      })
     }
   }
 
@@ -86,7 +147,7 @@ const personsEsilla=filter
   return (
     <div>
       <h2>Phonebook</h2>
-
+      <Notification message={notificationMessage}/>
       <Filter filter={filter} handleFilterChange={handleFilterChange}/>
       
       <h2>add a new</h2>
@@ -100,7 +161,7 @@ const personsEsilla=filter
         />
 
       <h2>Numbers</h2>
-      <Persons personsEsilla={personsEsilla}/>
+      <Persons personsEsilla={personsEsilla} deletePerson={deletePerson}/>
       
     </div>
   )
