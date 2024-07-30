@@ -1,3 +1,5 @@
+const _ =require('lodash')
+
 const dummy=(blogs)=>{
     return 1;
 }
@@ -25,8 +27,24 @@ const favoriteBlog=(blogs)=>{
     }
 }
 
+const mostBlogs=(blogs)=>{
+    if (blogs.length===0){
+        return null
+    }
+
+    const authorGroups = _.groupBy(blogs,'author')
+    const authorBlogCounts=_.map(authorGroups, (authorBlogs, author)=>({
+        author:author,
+        blogs: authorBlogs.length
+    }))
+
+    const mostBlogsAuthor=_.maxBy(authorBlogCounts,'blogs')
+    return mostBlogsAuthor
+}
+
 module.exports={
     dummy,
     totalLikes,
     favoriteBlog,
+    mostBlogs,
 }
