@@ -3,12 +3,12 @@ const assert = require('node:assert')
 const listHelper = require('../utils/list_helper')
 
    
-describe('dummy',()=>{
-    test('dummy returns 1', () => {
+
+test('dummy returns 1', () => {
     const result = listHelper.dummy([])
     assert.strictEqual(result, 1)
     })
-})
+
 
 const listWithOneBlog=[
     {
