@@ -98,6 +98,21 @@ test('Blog deleted succes', async()=>{
     expect (newResponse.status).toBe(204)
 })
 
+test('Blog updating success', async()=>{
+    const blogsAtStart=await Blog.find({})
+    const blogToUpdate=blogsAtStart[0]
+
+    const updatedBlogData={likes: blogToUpdate.likes + 1,}
+
+    await api.put(`/api/blogs/${blogToUpdate._id}`).send(updatedBlogData)
+      .expect(200).expect('Content-Type', /application\/json/)
+
+    const blogsAtEnd=await Blog.find({})
+    const updatedBlog=blogsAtEnd.find(b=>b._id.toString()=== blogToUpdate._id.toString())
+
+    expect(updatedBlog.likes).toBe(updatedBlogData.likes)
+})
+
 afterAll(()=>{
      mongoose.connection.close()
 })
