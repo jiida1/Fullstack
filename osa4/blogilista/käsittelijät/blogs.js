@@ -1,5 +1,6 @@
 const blogsRouter=require('express').Router()
 const { request, response } = require('../app')
+const blog = require('../mallit/blog')
 const Blog=require('../mallit/blog')
 
 blogsRouter.get('/', (request,response)=>{
@@ -24,6 +25,14 @@ blogsRouter.post('/', async (request,response)=>{
 
     const savedBlog = await blog.save()
     response.status(201).json(savedBlog)
+})
+
+blogsRouter.delete('/:id',async(request, response)=>{
+    const id=request.params.id
+
+    await Blog.findByIdAndDelete(id)
+    response.status(204).end()
+        
 })
 
 module.exports=blogsRouter

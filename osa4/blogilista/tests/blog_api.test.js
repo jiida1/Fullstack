@@ -89,6 +89,15 @@ test('Blog url is missing',async()=>{
     expect(response.status).toBe(201)
 })
 
+test('Blog deleted succes', async()=>{
+    const initialBlogs= await helper.blogsInDb()
+    const delId=initialBlogs[1].id
+    const newResponse= await api.delete(`/api/blogs/${delId}`)
+    const newBlogsI= await helper.blogsInDb()
+    expect (newBlogsI).toHaveLength(initialBlogs.length-1)
+    expect (newResponse.status).toBe(204)
+})
+
 afterAll(()=>{
      mongoose.connection.close()
 })
