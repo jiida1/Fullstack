@@ -17,6 +17,7 @@ const Header=({name})=>{
 }
 
 const Content=({parts})=>{
+    console.log("content", parts)
     return(
         <div>
             {parts.map(part=>(
